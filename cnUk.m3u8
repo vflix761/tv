@@ -1,4 +1,14 @@
 #EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=5000000
-http://main.light-ott.net:80/play/live.php?mac=00:1a:79:6A:88:07&stream=820667&extension=m3u8
+#EXT-X-TARGETDURATION:1
+#EXT-X-MEDIA-SEQUENCE:1
+#EXTINF:1.000,
+http://extraott.com:80/live/6945574629/7169628753/13994.ts
+#EXTINF:1.000,
+http://extraott.com:80/live/6945574629/7169628753/13994.ts
+#EXTINF:1.000,
+http://extraott.com:80/live/6945574629/7169628753/13994.ts
+#EXTINF:1.000,
+http://extraott.com:80/live/6945574629/7169628753/13994.ts
+#EXTINF:1.000,
+http://extraott.com:80/live/6945574629/7169628753/13994.ts
