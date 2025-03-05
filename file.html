@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Timers</title>
+  <style>
+    body {
+      background-color: #111810;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .match-card {
+      background-color: #111810;
+      border: 2px solid #00AB32;
+      border-radius: 10px;
+      margin: 10px auto;
+      padding: 15px;
+      color: #fff;
+      width: 90%;
+      cursor: pointer;
+    }
+
+    .match-title {
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .match-logo img {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+
+    .teams {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    .team {
+      text-align: center;
+    }
+
+    .team img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    .team-name {
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .live-text {
+      position: absolute;
+      font-size: 20px;
+      font-weight: bold;
+      color: red;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .timer {
+      font-size: 14px;
+      color: #ffcc00;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Video Player Styles */
+    .video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-container {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      background: black;
+      padding: 10px;
+      border-radius: 10px;
+      border: 3px solid #00AB32;
+    }
+
+    video {
+      width: 100%;
+      max-height: 100vh;
+      border-radius: 10px;
+    }
+
+    .vflix-text {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      color: #00AB32;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .filter-button {
+      background-color: #111810;
+      color: #fff;
+      border: 2px solid #00AB32;
+      border-radius: 5px;
+      padding: 10px 15px;
+      margin: 0 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .filter-button.active {
+      background-color: #00AB32;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="filter-buttons">
+    <div class="filter-button" onclick="filterMatches('all')">All <span id="all-count">5</span></div>
+    <div class="filter-button" onclick="filterMatches('live')">Live <span id="live-count">0</span></div>
+    <div class="filter-button" onclick="filterMatches('upcoming')">Upcoming <span id="upcoming-count">5</span></div>
+    <div class="filter-button" onclick="filterMatches('recent')">Recent <span id="recent-count">0</span></div>
+  </div>
+
+  <div id="match-container"></div>
+
+  <!-- Video Player Overlay -->
+  <div id="video-overlay" class="video-overlay" onclick="closeVideo(event)">
+    <div class="video-container" onclick="event.stopPropagation()">
+      <video id="match-video" controls poster="https://example.com/video-thumbnail.jpg"></video>
+      <div class="vflix-text">vflix</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const matches = [
+      {
+        id: "match-1",
+        title: "Football | UCL",
+        logo: "https://images.fotmob.com/image_resources/logo/leaguelogo/dark/42.png",
+        teamA: { name: "Feyenoord", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/10235.png" },
+        teamB: { name: "Inter", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8636.png" },
+        streamUrl: "https://vflix761.github.io/tv/espn2nl.m3u8",
+        startTime: new Date("2025-03-05T20:45:00").getTime(),
+        endTime: new Date("2025-03-05T22:45:00").getTime()
+      },
+      {
+        id: "match-2",
+        title: "Football | UCL",
+        logo: "https://images.fotmob.com/image_resources/logo/leaguelogo/dark/42.png",
+        teamA: { name: "Bayern München", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9823.png" },
+        teamB: { name: "Leverkusen", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8178.png" },
+        streamUrl: "https://vflix761.github.io/tv/tnt.m3u8",
+        startTime: new Date("2025-03-05T23:00:00").getTime(),
+        endTime: new Date("2025-03-06T00:59:00").getTime()
+      },
+      {
+        id: "match-3",
+        title: "Football | UCL",
+        logo: "https://images.fotmob.com/image_resources/logo/leaguelogo/dark/42.png",
+        teamA: { name: "Benfica", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9772.png" },
+        teamB: { name: "Barcelona", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8634.png" },
+        streamUrl: "https://vflix761.github.io/tv/tnt.m3u8",
+        startTime: new Date("2025-03-05T23:00:00").getTime(),
+        endTime: new Date("2025-03-06T00:59:00").getTime()
+      },
+      {
+        id: "match-4",
+        title: "Football | UCL",
+        logo: "https://images.fotmob.com/image_resources/logo/leaguelogo/dark/42.png",
+        teamA: { name: "PSG", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/9847.png" },
+        teamB: { name: "Liverpool", logo: "https://images.fotmob.com/image_resources/logo/teamlogo/8650.png" },
+        streamUrl: "https://epltv1.github.io/epl.m3u8",
+        startTime: new Date("2025-03-05T23:00:00").getTime(),
+        endTime: new Date("2025-03-06T00:59:00").getTime()
+      },      
+    ];
+
+    function renderMatches() {
+      const container = document.getElementById("match-container");
+      container.innerHTML = '';
+
+      matches.forEach(match => {
+        const card = document.createElement("div");
+        card.className = "match-card";
+        card.innerHTML = `
+          <div class="match-title">
+            <div class="match-logo">
+              <img src="${match.logo}" alt="Match Logo">
+            </div>
+            <span>${match.title}</span>
+          </div>
+          <div class="teams">
+            <div class="team">
+              <img src="${match.teamA.logo}" alt="${match.teamA.name}">
+              <div class="team-name">${match.teamA.name}</div>
+            </div>
+            <div class="live-text hidden" id="live-${match.id}">LIVE</div>
+            <div class="team">
+              <img src="${match.teamB.logo}" alt="${match.teamB.name}">
+              <div class="team-name">${match.teamB.name}</div>
+            </div>
+          </div>
+          <div class="timer" id="timer-${match.id}">Loading...</div>
+        `;
+
+        // Open video on click
+        card.addEventListener("click", () => openVideo(match.streamUrl));
+
+        container.appendChild(card);
+      });
+
+      // Start timer updates
+      setInterval(updateTimers, 1000);
+    }
+
+    function updateTimers() {
+      const now = Date.now();
+
+      matches.forEach(match => {
+        const timerElement = document.getElementById(`timer-${match.id}`);
+        const liveElement = document.getElementById(`live-${match.id}`);
+
+        if (!timerElement) return;
+
+        if (now < match.startTime) {
+          const timeLeft = match.startTime - now;
+
+          const hours = String(Math.floor(timeLeft / 3600000)).padStart(2, '0');
+          const minutes = String(Math.floor((timeLeft % 3600000) / 60000)).padStart(2, '0');
+          const seconds = String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, '0');
+
+          timerElement.textContent = `Starts in: ${hours}:${minutes}:${seconds}`;
+          liveElement.classList.add("hidden");
+        } else if (now >= match.startTime && now <= match.endTime) {
+          const timeLeft = match.endTime - now;
+
+          const hours = String(Math.floor(timeLeft / 3600000)).padStart(2, '0');
+          const minutes = String(Math.floor((timeLeft % 3600000) / 60000)).padStart(2, '0');
+          const seconds = String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, '0');
+
+          timerElement.textContent = `Time Left: ${hours}:${minutes}:${seconds}`;
+          liveElement.classList.remove("hidden");
+        } else {
+          timerElement.textContent = "Match Ended";
+          liveElement.classList.add("hidden");
+        }
+      });
+
+      updateCounts();
+    }
+
+    function updateCounts() {
+      const now = Date.now();
+      const liveCount = matches.filter(match => now >= match.startTime && now <= match.endTime).length;
+      const upcomingCount = matches.filter(match => now < match.startTime).length;
+      const recentCount = matches.filter(match => now > match.endTime).length;
+
+      document.getElementById("live-count").textContent = liveCount;
+      document.getElementById("upcoming-count").textContent = upcomingCount;
+      document.getElementById("recent-count").textContent = recentCount;
+      document.getElementById("all-count").textContent = matches.length;
+    }
+
+    function filterMatches(filter) {
+      const container = document.getElementById("match-container");
+      const buttons = document.querySelectorAll('.filter-button');
+
+      buttons.forEach(button => button.classList.remove('active'));
+      const activeButton = Array.from(buttons).find(button => button.textContent.trim().toLowerCase() === filter);
+      if (activeButton) activeButton.classList.add('active');
+
+      container.innerHTML = '';
+
+      const filteredMatches = matches.filter(match => {
+        if (filter === 'live') return Date.now() >= match.startTime && Date.now() <= match.endTime;
+        if (filter === 'upcoming') return Date.now() < match.startTime;
+        if (filter === 'recent') return Date.now() > match.endTime;
+        return true; // all matches
+      });
+
+      filteredMatches.forEach(match => {
+        const card = document.createElement("div");
+        card.className = "match-card";
+        card.innerHTML = `
+          <div class="match-title">
+            <div class="match-logo">
+              <img src="${match.logo}" alt="Match Logo">
+            </div>
+            <span>${match.title}</span>
+          </div>
+          <div class="teams">
+            <div class="team">
+              <img src="${match.teamA.logo}" alt="${match.teamA.name}">
+              <div class="team-name">${match.teamA.name}</div>
+            </div>
+            <div class="live-text hidden" id="live-${match.id}">LIVE</div>
+            <div class="team">
+              <img src="${match.teamB.logo}" alt="${match.teamB.name}">
+              <div class="team-name">${match.teamB.name}</div>
+            </div>
+          </div>
+          <div class="timer" id="timer-${match.id}">Loading...</div>
+        `;
+
+        // Open video on click
+        card.addEventListener("click", () => openVideo(match.streamUrl));
+
+        container.appendChild(card);
+      });
+    }
+
+    function openVideo(streamUrl) {
+      const videoOverlay = document.getElementById("video-overlay");
+      const videoElement = document.getElementById("match-video");
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(videoElement);
+      } else {
+        videoElement.src = streamUrl;
+      }
+
+      videoElement.play();
+      videoOverlay.style.display = "flex";
+    }
+
+    function closeVideo(event) {
+      if (event.target.id === "video-overlay") {
+        document.getElementById("video-overlay").style.display = "none";
+        document.getElementById("match-video").pause();
+      }
+    }
+
+    renderMatches();
+  </script>
+</body>
+</html>
