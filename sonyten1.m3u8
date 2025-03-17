@@ -1,14 +1,4 @@
 #EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-TARGETDURATION:1
-#EXT-X-MEDIA-SEQUENCE:1
-#EXTINF:1.000,
-http://starshare.org:80/live/134134/134134/154.ts
-#EXTINF:1.000,
-http://starshare.org:80/live/134134/134134/154.ts
-#EXTINF:1.000,
-http://starshare.org:80/live/134134/134134/154.ts
-#EXTINF:1.000,
-http://starshare.org:80/live/134134/134134/154.ts
-#EXTINF:1.000,
-http://starshare.org:80/live/134134/134134/154.ts
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=5000000
+http://krooztv.live:80/play/live.php?mac=00:1A:79:7f:bd:d2&stream=2395&extension=m3u8
